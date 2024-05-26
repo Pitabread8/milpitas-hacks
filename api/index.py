@@ -1,7 +1,8 @@
 from enum import Enum
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, Response
 import ollama
 import re
+import time
 
 # START YOUR VENV: venv\Scripts\Activate.ps1, OR source myvenv/bin/activate
 # python -m venv <directory>
@@ -14,9 +15,8 @@ class CurrentJob(Enum):
     NLP = 2
     REFFERALS = 3
     
-
-
 url_cache: str = ""
+summary_message: str = ""
 is_processing: bool = False 
 project_state: CurrentJob = CurrentJob.IDLE
 
@@ -35,12 +35,30 @@ regex = re.compile(
 
 app = Flask(__name__)
 
+def text_generator(stream):
+    global summary_message
+    set_project_state(CurrentJob.SUMMARY, True)
 
-@app.route("/api/summarize")
+    start_time = time.time()
+    for chunk in stream:
+        # endResult += chunk['response']
+        text = chunk['response']
+        if (text != ''):
+            summary_message += text
+            yield text
+
+    print("\n --- %s seconds ---" % (time.time() - start_time))
+
+    set_project_state(CurrentJob.IDLE, False)
+
+        # print(chunk['response'], end='', flush=True)
+
+@app.route("/api/summarize", methods=['POST'])
 def summarize(url: str = "") -> None:
+    # start_time = time.time()
 
     global url_cache
-    url1 = request.args.get('url')
+    url1 = request.form.get('url')
     if (url1 is not None): 
         url_cache = url1
     else: 
@@ -50,10 +68,6 @@ def summarize(url: str = "") -> None:
         print("Invalid url, please try again")
         return None
     
-    set_project_state(CurrentJob.SUMMARY, True)
-    # is_processing = True
-    # project_state = CurrentJob.SUMMARY
-    
     stream = ollama.generate(
         model='llama3',
         # prompt= 'say hi',
@@ -61,42 +75,19 @@ def summarize(url: str = "") -> None:
         stream=True,
     )
 
-    # map()
-    endResult: str = ""
-    for chunk in stream:
-        endResult += chunk['response']
-        print(chunk['response'], end='', flush=True)
-    
-    set_project_state(CurrentJob.IDLE, False)
-    # is_processing = False
-    # project_state = CurrentJob.IDLE
-
-    return endResult
+    return Response(text_generator(stream))
 
 @app.route("/api/identify_bias")
-def identify_bias() -> None:
-
-    if (not re.match(regex, url_cache)):
-        print("Invalid url, please try again")
-        return None
+def identify_bias() -> str:
     
     # is_processing = True
     set_project_state(CurrentJob.NLP, True)
-    
-    stream = ollama.generate(
-        model='llama3',
-        # prompt= 'say hi',
-        prompt= f'Identity the political/country bias in the article : {url_cache}',
-        stream=True,
-    )
-    endResult: str = ""
-    for chunk in stream:
-        endResult += chunk['response']
-        print(chunk['response'], end='', flush=True)
-    
-    set_project_state(CurrentJob.IDLE, False)
 
-    return endResult
+    set_project_state(CurrentJob.NLP, False)
+    
+    endResult: str = ""
+
+    return summary_message
 
 @app.route("/api/link_refer")
 def link_refer() -> None:
