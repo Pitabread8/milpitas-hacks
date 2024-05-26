@@ -1,12 +1,12 @@
 export default function Home() {
   return (
     <>
-      <div className="text-[#EEEEEE] font-serif">
-        <div className="h-screen w-screen flex justify-center items-center flex-col gap-2">
-          <h1 className="text-[150px] italic fade-up-right">Political Bias</h1>
+      <div className="font-serif">
+        <div className="text-[#EEEEEE] h-screen w-screen flex justify-center items-center flex-col gap-2">
+          <h1 className="text-[#EEEEEE] text-[150px] italic fade-up-right">Political Bias</h1>
           <p className="py-2">This is a paragraph about political bias.</p>
         </div>
-        <div className="bg-yellow-300 h-screen w-screen">
+        <div className="bg-white h-screen w-screen">
           <h1 className="text-6xl text-center pt-16">Testing</h1>
           <input type="text" placeholder="test" />
           <form action="/api/summarize" method="POST">
