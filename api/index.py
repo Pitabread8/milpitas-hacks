@@ -128,3 +128,4 @@ def link_refer() -> None:
 if __name__ == "__main__":
     # summarize("https://apnews.com/article/israel-gaza-rafah-offensive-us-united-nations-403a7c44b248b828559253206140eae5")
     app.run(debug = True, threaded = True)
+
