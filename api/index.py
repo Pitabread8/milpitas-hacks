@@ -44,8 +44,9 @@ def text_generator(stream):
         # endResult += chunk['response']
         text = chunk['response']
         if (text != ''):
+            print(text, end='', flush=True)
             summary_message += text
-            yield text
+            yield text  
 
     print("\n --- %s seconds ---" % (time.time() - start_time))
 
@@ -71,7 +72,7 @@ def summarize(url: str = "") -> None:
     stream = ollama.generate(
         model='llama3',
         # prompt= 'say hi',
-        prompt= f'summarize this article : {url_cache}',
+        prompt= f'summarize this article in less than 180 words: {url_cache}',
         stream=True,
     )
 
@@ -119,4 +120,6 @@ def link_refer() -> None:
 if __name__ == "__main__":
     # summarize("https://apnews.com/article/israel-gaza-rafah-offensive-us-united-nations-403a7c44b248b828559253206140eae5")
     app.run(debug = True, threaded = True)
+
+    
 
