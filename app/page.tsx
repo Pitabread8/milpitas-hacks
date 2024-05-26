@@ -1,5 +1,35 @@
 import Image from 'next/image'
 
+"use client"
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+const StreamText = () => {
+  const [textData, setTextData] = useState('');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get('/api/summarize');
+        setTextData(response.data);
+        console.log(response.data)
+      } catch (error) {
+        console.error('Error fetching text data:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold text-white mb-4">Streamed Text</h1>
+      <pre className="p-4 rounded-md bg-gray-100 text-sm">{textData}</pre>
+    </div>
+  );
+};
+
+
 export default function Home() {
   return (
     <>
@@ -24,6 +54,10 @@ export default function Home() {
             height={500}
             alt="Image"
           />
+        </div>
+
+        <div className="Response">
+          <StreamText />
         </div>
       </div>
     </>

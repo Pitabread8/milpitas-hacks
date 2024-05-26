@@ -52,6 +52,7 @@ def text_generator(stream):
 
     set_project_state(CurrentJob.IDLE, False)
 
+    return render_template('index.html', name=summary_message)
         # print(chunk['response'], end='', flush=True)
 
 @app.route("/api/summarize", methods=['POST'])
@@ -76,7 +77,7 @@ def summarize(url: str = "") -> None:
         stream=True,
     )
 
-    return Response(text_generator(stream))
+    return Response(text_generator(stream), mimetype='text/plain')
 
 @app.route("/api/identify_bias")
 def identify_bias() -> str:
