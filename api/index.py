@@ -52,7 +52,7 @@ def text_generator(stream):
 
     set_project_state(CurrentJob.IDLE, False)
 
-    return render_template('index.html', name=summary_message)
+    # return render_template('index.html', name=summary_message)
         # print(chunk['response'], end='', flush=True)
 
 @app.route("/api/summarize", methods=['POST'])
@@ -73,7 +73,7 @@ def summarize(url: str = "") -> None:
     stream = ollama.generate(
         model='llama3',
         # prompt= 'say hi',
-        prompt= f'summarize this article in less than 180 words: {url_cache}',
+        prompt= f'summarize this article in less than 20 words: {url_cache}',
         stream=True,
     )
 
