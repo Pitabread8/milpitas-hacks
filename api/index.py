@@ -1,5 +1,6 @@
 from enum import Enum
-from flask import Flask, render_template, request, Response
+from flask import Flask, jsonify, redirect, render_template, request, Response
+from flask_cors import CORS
 import ollama
 import re
 import time
@@ -34,6 +35,8 @@ regex = re.compile(
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
 app = Flask(__name__)
+app.debug = True
+CORS(app)
 
 def text_generator(stream):
     global summary_message
@@ -56,7 +59,7 @@ def text_generator(stream):
         # print(chunk['response'], end='', flush=True)
 
 @app.route("/api/summarize", methods=['POST'])
-def summarize(url: str = "") -> None:
+def summarize(url: str = ""):
     # start_time = time.time()
 
     global url_cache
@@ -77,7 +80,27 @@ def summarize(url: str = "") -> None:
         stream=True,
     )
 
-    return Response(text_generator(stream), mimetype='text/plain')
+    global summary_message
+    set_project_state(CurrentJob.SUMMARY, True)
+
+    start_time = time.time()
+    for chunk in stream:
+        # endResult += chunk['response']
+        text = chunk['response']
+        if (text != ''):
+            print(text, end='', flush=True)
+            summary_message += text
+            # yield text  
+
+    print("\n --- %s seconds ---" % (time.time() - start_time))
+
+    set_project_state(CurrentJob.IDLE, False)
+
+    response = {'exported-text': summary_message}
+
+    # return redirect('')
+    return jsonify(response), 200
+    # return Response(text_generator(stream), mimetype='text/plain')
 
 @app.route("/api/identify_bias")
 def identify_bias() -> str:
