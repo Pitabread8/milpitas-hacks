@@ -58,16 +58,18 @@ def text_generator(stream):
     # return render_template('index.html', name=summary_message)
         # print(chunk['response'], end='', flush=True)
 
-@app.route("/api/summarize", methods=['POST'])
+@app.route("/api/summarize", methods=['GET'])
 def summarize(url: str = ""):
     # start_time = time.time()
 
     global url_cache
-    url1 = request.form.get('url')
+    url1 = request.args.get('url')
     if (url1 is not None): 
         url_cache = url1
     else: 
         url_cache = url
+
+    print(url_cache + 'LOOK FOR ME HERE')
 
     if (not re.match(regex, url_cache)):
         print("Invalid url, please try again")
@@ -85,22 +87,20 @@ def summarize(url: str = ""):
 
     start_time = time.time()
     for chunk in stream:
-        # endResult += chunk['response']
         text = chunk['response']
         if (text != ''):
             print(text, end='', flush=True)
             summary_message += text
-            # yield text  
 
     print("\n --- %s seconds ---" % (time.time() - start_time))
 
     set_project_state(CurrentJob.IDLE, False)
 
-    response = {'exported-text': summary_message}
+    output: str = summary_message
 
-    # return redirect('')
-    return jsonify(response), 200
-    # return Response(text_generator(stream), mimetype='text/plain')
+    response = {'text': summary_message}
+
+    return jsonify({'text': output}), 200
 
 @app.route("/api/identify_bias")
 def identify_bias() -> str:

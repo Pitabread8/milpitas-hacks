@@ -2,33 +2,67 @@
 import Image from 'next/image'
 
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 
-const StreamText = () => {
+const Chat = () => {
   const [textData, setTextData] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [formData, setFormData] = useState({});
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get('/api/summarize');
-        setTextData(response.data);
-        console.log(response.data)
-      } catch (error) {
-        console.error('Error fetching text data:', error);
-      }
-    };
+  const handleFormDataChange = (event) => {
+    setFormData({...formData, [event.target.name]: event.target.value });
+  };
 
-    fetchData();
-  }, []);
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setIsLoading(true);
+    try {
+      const urlParams = new URLSearchParams(formData);
+      const response = await fetch(`http://localhost:5000/api/summarize?${urlParams.toString()}`);
+      const data = await response.json();
+      setTextData(data.text);
+    } catch (error) {
+      console.error('Error fetching text data:', error);
+      setError(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-white mb-4">Streamed Text</h1>
-      <pre className="p-4 rounded-md bg-gray-100 text-sm">{textData}</pre>
+    <div>
+      <form onSubmit={handleSubmit}
+        className="w-full rounded-md border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"    
+      >
+        <label>
+          Url Input
+          <input type="text" name="url" onChange={handleFormDataChange} style={{ color: 'black' }}/>
+        </label>
+        <button
+          type="submit"
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          style={{ marginLeft: '16px' }}
+        >
+          Submit
+        </button>
+      </form>
+      {isLoading? (
+        <p>Loading text data...</p>
+      ) : error? (
+        <p>Error: {error.message}</p>
+      ) : (
+        <textarea
+          type="text"
+          className="w-full rounded-md border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+          readOnly={true}
+          value={textData}
+        />
+      )}
     </div>
   );
 };
 
+// export default Chat;
 
 export default function Home() {
   return (
@@ -41,11 +75,7 @@ export default function Home() {
         <div className="bg-white h-screen w-screen flex flex-row items-start pt-16 justify-center">
           <div className="pl-12">
             <h1 className="text-6xl text-left">Get Your News, Quick.</h1>
-            <form action="/api/summarize" method="POST">
-              <p className="text-2xl leading-loose py-2 w-1/2">Paste a URL link, hit `enter`, and watch the magic happen. Our Summarizer will provide a concise and accurate summary of any political article so you can educate yourself in mere seconds.</p>
-              <label htmlFor="url">Enter article URL:</label>
-              <input type="text" id="url" name="url" required />
-            </form>
+            <Chat />
           </div>
           <Image
             className="pr-12"
@@ -54,10 +84,6 @@ export default function Home() {
             height={500}
             alt="Image"
           />
-        </div>
-
-        <div className="Response">
-          <StreamText />
         </div>
       </div>
     </>
